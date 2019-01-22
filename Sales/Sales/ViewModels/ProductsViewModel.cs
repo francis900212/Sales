@@ -6,6 +6,7 @@
     using System.Windows.Input;
     using Common.Models;
     using GalaSoft.MvvmLight.Command;
+    using Sales.Helpers;
     using Services;
     using Xamarin.Forms;
 
@@ -41,14 +42,16 @@
             Response connection = await apiService.CheckConnection();
             if (!connection.IsSuccess) {
                 IsRefreshing = false;
-                await Application.Current.MainPage.DisplayAlert("Error", connection.Message, "Accept");
+                await Application.Current.MainPage.DisplayAlert(Languages.Error, connection.Message, Languages.Accept);
                 return;
             }
             string url = Application.Current.Resources["UrlAPI"].ToString();
-            Response response = await apiService.GetList<Product>(url, "/api", "/Products");
+            string prefix = Application.Current.Resources["UrlPrefix"].ToString();
+            string controller = Application.Current.Resources["UrlProductsController"].ToString();
+            Response response = await apiService.GetList<Product>(url, prefix, controller);
             if (!response.IsSuccess) {
                 IsRefreshing = false;
-                await Application.Current.MainPage.DisplayAlert("Error", response.Message, "Accept");
+                await Application.Current.MainPage.DisplayAlert(Languages.Error, response.Message, Languages.Accept);
                 return;
             }
 

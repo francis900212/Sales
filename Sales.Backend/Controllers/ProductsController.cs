@@ -1,9 +1,11 @@
 ﻿namespace Sales.Backend.Controllers
 {
     using System.Data.Entity;
+    using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
     using System.Web.Mvc;
+    using Sales.Backend.Helpers;
     using Sales.Backend.Models;
     using Sales.Common.Models;
 
@@ -14,7 +16,7 @@
         // GET: Products
         public async Task<ActionResult> Index()
         {
-            return View(await db.Products.ToListAsync());
+            return View(await db.Products.OrderBy(p => p.Description).ToListAsync());
         }
 
         // GET: Products/Details/5
@@ -43,16 +45,25 @@
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "ProductID,Description,Remarks,Price,ImagePath,IsAvailable,PublishOn")] Product product)
+        public async Task<ActionResult> Create(ProductView view)
         {
             if (ModelState.IsValid)
             {
+                string pic = null;
+                if (view.ImageFile != null) {
+
+                    string folder = "~/Content/Products";
+                    pic = FilesHelper.UploadPhoto(view.ImageFile, folder);
+                }
+
+                Product product = view.ConvertToProduct(pic);
+
                 db.Products.Add(product);
                 await db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
-            return View(product);
+            return View(view);
         }
 
         // GET: Products/Edit/5
@@ -75,7 +86,7 @@
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "ProductID,Description,Remarks,Price,ImagePath,IsAvailable,PublishOn")] Product product)
+        public async Task<ActionResult> Edit(Product product)
         {
             if (ModelState.IsValid)
             {
